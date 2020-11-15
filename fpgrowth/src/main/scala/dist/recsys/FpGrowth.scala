@@ -1,4 +1,4 @@
-package market
+package dist.recsys
 
 import org.apache.spark.SparkConf
 import org.apache.spark.mllib.fpm.FPGrowth
