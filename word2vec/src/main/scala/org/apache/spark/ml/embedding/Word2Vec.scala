@@ -367,7 +367,7 @@ object Word2VecModel extends MLReadable[Word2VecModel] {
       val wordVectors = data.getAs[Seq[Float]](1).toArray
       val oldModel = new embedding.Word2VecModel(wordIndex, wordVectors)
       val model = new Word2VecModel(metadata.uid, oldModel)
-      DefaultParamsReader.getAndSetParams(model, metadata)
+      metadata.getAndSetParams(model)
       model
     }
   }

@@ -649,11 +649,19 @@ class Word2Vec extends Serializable with Logging {
         }.flatten
       }
 
-      // TODO: FIXME 这里需要归一化
-      val synAgg = partial.reduceByKey { case (v1, v2) =>
-          blas.saxpy(vectorSize, 1.0f, v2, 1, v1, 1)
-          v1
+      // FIXED: embedding normalized
+      val synAgg = partial.mapPartitions { iter =>
+        iter.map { case (id, vec) =>
+          (id, (vec, 1))
+        }
+      }.reduceByKey { case ((v1, count1), (v2, count2)) =>
+        blas.saxpy(vectorSize, 1.0f, v2, 1, v1, 1)
+        (v1, count1 + count2)
+      }.map { case (id, (vec, count)) =>
+        blas.sscal(vectorSize, 1.0f / count, vec, 1)
+        (id, vec)
       }.collect()
+
       var i = 0
       while (i < synAgg.length) {
         val index = synAgg(i)._1
