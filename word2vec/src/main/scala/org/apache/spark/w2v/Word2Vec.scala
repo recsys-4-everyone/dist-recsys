@@ -1,8 +1,10 @@
 package org.apache.spark.w2v
 
+import com.linkedin.nn.algorithm.CosineSignRandomProjectionNNS
 import org.apache.spark.SparkConf
 import org.apache.spark.ml.embedding.{Word2Vec, Word2VecModel}
 import org.apache.spark.ml.linalg.Vectors
+import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.{DataFrame, SaveMode, SparkSession}
 
 import scala.collection.mutable
@@ -54,7 +56,8 @@ object Word2Vec {
 
     val model = word2Vec.fit(trainingData)
 
-    val i1i2Similarities = cosineSimilarity(spark, model)
+    val i1i2Similarities = cosineSimilarityMinHeap(spark, model)
+    // val i1i2Similarities = cosineSimilarityLSH(spark, model)
 
     i1i2Similarities
       .write
@@ -64,7 +67,7 @@ object Word2Vec {
     spark.stop()
   }
 
-  def cosineSimilarity(spark: SparkSession, model: Word2VecModel): DataFrame = {
+  def cosineSimilarityMinHeap(spark: SparkSession, model: Word2VecModel): DataFrame = {
     val w2v = model.getVectors.rdd
       .map(r => {
         val word = r.getAs[String]("word")
@@ -101,6 +104,34 @@ object Word2Vec {
 
       heap.toArray.map { case (word2, sim) => (word1, word2, sim) }
     }.toDF("item1", "item2", "sim")
+  }
+
+  def cosineSimilarityLSH(spark: SparkSession, model: Word2VecModel): DataFrame = {
+    import spark.implicits._
+
+    val embedding: RDD[(Long, org.apache.spark.ml.linalg.Vector)] = model.getVectors.rdd.map(r => {
+      val word = r.getAs[Long]("word")
+      val vector = r.getAs[org.apache.spark.ml.linalg.Vector]("vector").toDense
+      (word, vector)
+    })
+
+    val embeddingCount = embedding.count()
+
+    val topN = 100
+
+    // LSH 的参数按照自己的数据进行设置
+    val lsh = new CosineSignRandomProjectionNNS()
+      .setNumHashes(200) // 对应 LSH 算法中的签名个数 L
+      .setSignatureLength(math.log(embeddingCount).toInt) // 对应每个签名长度 k
+      .setJoinParallelism(1000) // spark join 并行度, 根据自己数据大小自行设置
+      .setBucketLimit(50000) // 每个 hash 桶内保留的元素个数
+      .setShouldSampleBuckets(true)
+      .setNumOutputPartitions(100)
+      .createModel(vectorSize) // 商品向量长度
+
+    lsh.getSelfAllNearestNeighbors(embedding, topN)
+      .map { case (item1, item2, distance) => (item1, item2, 1 - distance) } // 因为算出来的是距离, 这里转换成相似度了
+      .toDF("item1", "item2", "sim")
   }
 
   def basicSpark: SparkSession =
