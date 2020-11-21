@@ -79,7 +79,7 @@ object ItemCF {
 
     /* save to be used */
     itemTopNSimilarity
-      .map { case (item1, simItems) => simItems.map { case (item2, sim) => (item1, item2, sim) } }
+      .flatMap { case (item1, simItems) => simItems.map { case (item2, sim) => (item1, item2, sim) } }
       .toDF("item1", "item2", "sim")
       .write
       .mode(SaveMode.Overwrite)
