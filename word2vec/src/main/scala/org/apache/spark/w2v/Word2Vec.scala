@@ -35,7 +35,7 @@ object Word2Vec {
     val spark = this.basicSpark
     import spark.implicits._
 
-    val corpus = spark.sqlContext.sql("select user_id, item_ids from rec.data_w2v")
+    val corpus = spark.sqlContext.sql("select user_id, item_ids from recsys.data_w2v")
     val trainingData = corpus
       .map(r => r.getAs[String]("item_ids").split(","))
       .toDF("ids")
