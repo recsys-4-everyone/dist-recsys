@@ -8,6 +8,8 @@ import org.apache.spark.sql.SparkSession
 object SimilarityCalculator {
   def main(args: Array[String]): Unit = {
     val spark = this.spark
+    
+    spark.sparkContext.setCheckpointDir("/tmp")
 
     val candidates = spark.createDataFrame(Seq(
       ("1000000", Vectors.dense(0.0110, 0.2341)),
