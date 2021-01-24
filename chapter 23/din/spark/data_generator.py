@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 # 这里因为要将数据保存在本地，所以 master 指定为 local, 同时指定 jars. 
-# 启动命令: spark-submit data_generator.py --master local --jars spark-tensorflow-connector_2.11-1.15.0
+# 启动命令: spark-submit --master local --jars spark-tensorflow-connector_2.11-1.15.0 data_generator.py 
 from pyspark.sql.types import *
 from pyspark.sql import SparkSession
 
