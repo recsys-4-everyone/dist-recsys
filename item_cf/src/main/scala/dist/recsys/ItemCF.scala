@@ -42,7 +42,7 @@ object ItemCF {
     /* 过滤无效用户 */
     val filteredUsers = userItemRating
       .groupBy("user").agg(countDistinct("item") as "item_count")
-      .filter($"item_count" <= UPPER_BOUND && $"item_count" >= LOWER_BOUND)
+      .filter($"item_count" < LOWER_BOUND && $"item_count" > UPPER_BOUND)
       .select("user").as[String].collect()
 
     val filteredUsersBC = spark.sparkContext.broadcast(filteredUsers)
