@@ -72,16 +72,18 @@ object FpGrowth {
       .map(itemSet => (itemSet.items.head, itemSet.freq))
       .collectAsMap()
 
+    val itemFrequentsBC = spark.sparkContext.broadcast(itemFrequents)
+
     model.generateAssociationRules(minConfidence).filter(
       rule =>
         rule.antecedent.length == 1 &&
           rule.consequent.length == 1 &&
-          itemFrequents.contains(rule.consequent.head))
+          itemFrequentsBC.value.contains(rule.consequent.head))
       .map(rule => {
         val A = rule.antecedent.head
         val B = rule.consequent.head
         val confidenceA2B = rule.confidence
-        val supportB = itemFrequents(B).toDouble / transactionsCount
+        val supportB = itemFrequentsBC.value(B).toDouble / transactionsCount
         val lift = confidenceA2B / supportB
         (A, (B, lift))
       }).topByKey(associationCounts)(ordering)
