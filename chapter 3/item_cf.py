@@ -52,7 +52,7 @@ class ItemCF:
             return acc
 
         def _list_merge(acc1, acc2):
-            acc1.extent(acc2)
+            acc1.extend(acc2)
             return acc1
 
         dataset = (dataset
@@ -119,7 +119,7 @@ class ItemCF:
 
 if __name__ == '__main__':
     spark_session = (SparkSession.builder.appName('item_cf').master('yarn')
-                     .set('spark.serializer', 'org.apache.spark.serializer.KryoSerializer')
+                     .config('spark.serializer', 'org.apache.spark.serializer.KryoSerializer')
                      .config('spark.network.timeout', '600')
                      .config('spark.driver.maxResultSize', '5g')
                      .enableHiveSupport().getOrCreate())
