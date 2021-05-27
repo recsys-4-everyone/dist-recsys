@@ -55,7 +55,7 @@ class FPG:
 
 if __name__ == '__main__':
     spark_session = (SparkSession.builder.appName('fpgrowth').master('yarn')
-                     .set('spark.serializer', 'org.apache.spark.serializer.KryoSerializer')
+                     .config('spark.serializer', 'org.apache.spark.serializer.KryoSerializer')
                      .config('spark.network.timeout', '600')
                      .config('spark.driver.maxResultSize', '5g')
                      .enableHiveSupport().getOrCreate())
