@@ -34,7 +34,7 @@ class FPG:
     @property
     def rules(self):
         dataset = self._dataset()
-        transactions_count = dataset
+        transactions_count = dataset.count()
         fp = FPGrowth(minSupport=self._min_support_count * 1.0 / transactions_count,
                       minConfidence=self._min_confidence,
                       itemsCol="items",
